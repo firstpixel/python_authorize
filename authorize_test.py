@@ -15,8 +15,6 @@
 #
 import unittest, sys, json
 from colorprint import ColorPrint as _
-
-
 from authorize import Authorize
 
 class TestAuthorize(unittest.TestCase):
@@ -89,7 +87,7 @@ class TestAuthorize(unittest.TestCase):
         self.validateAuthorize( sys.stdin, resultValidation)
 
     def validateAuthorize(self, stdin, resultValidation):
-        authorize = Authorize(stdin)
+        authorize = Authorize(stdin, True)
         totalResults = []
         totalValidation = []
 

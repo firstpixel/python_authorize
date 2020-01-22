@@ -18,12 +18,13 @@ from datetime import timedelta, date
 
 
 class Authorize:
-    def __init__(self, inputData):
+    def __init__(self, inputData, testing = False):
         self.accountCreated = False
         self.defaultAccount = None
         self.availableLimit = 0 
         self.orderedList = []
-        self.totalResultString = ""
+        if testing:
+            self.totalResultString = ""
         self.originalOrderList = []
         self.accountViolations = self.enum(  
             INITIALIZED = "account-already-initialized"  
@@ -44,6 +45,7 @@ class Authorize:
                     self.resultString = ""
                     self.resultObject = {}
                     self.transaction = None
+                    
                     #break for test cases
                     if line == "EOF":
                         sys.stdout.flush()
@@ -62,6 +64,7 @@ class Authorize:
                         activeCard = data["account"]["active-card"]
                         availableLimit = data["account"]["available-limit"]
                         account = Account(activeCard, availableLimit)
+                        #add account violations
                         self.violationList = self.checkAccountViolations(self.violationList, account)
                         account.setViolations(self.violationList)
                     
@@ -71,6 +74,7 @@ class Authorize:
                         amount = data["transaction"]["amount"]
                         timeTrans = data["transaction"]["time"]
                         self.transaction = Transaction(self.defaultAccount, merchant, amount, timeTrans, self.originalIndex)
+                        #add transaction violations
                         self.violationList = self.checkTransactionViolations(self.violationList, self.defaultAccount, self.transaction)
                         self.transaction.setViolations(self.violationList)
                         self.orderedList.append(self.transaction)
@@ -84,9 +88,13 @@ class Authorize:
                     #check for double transaction and small interval
                     self.orderedList = self.getDoubledTransactionAndSmallIntervalViolations(self.orderedList)
                     
+                    #put ordered list back into original list
                     self.setOriginalOrder()
+
+                    #clear order list 4 minuts behind
                     self.orderedList = self.clearOrderList(self.orderedList)
                     
+                    #calculate account limit 
                     if not self.transaction is None:
                         self.setTransactionAccountLimit( self.transaction, self.originalOrderList[-1])
                     else:
@@ -95,10 +103,12 @@ class Authorize:
                     #transform item in string
                     if len(self.originalOrderList) > 0:
                         self.resultString = json.dumps(self.originalOrderList[-1]) + '\n'
-                    
-                    self.totalResultString += self.resultString
+                    if testing:
+                        self.totalResultString += self.resultString
 
                     self.originalIndex += 1
+
+                    #print to console
                     sys.stdout.write(self.resultString)
         except KeyboardInterrupt:
             sys.stdout.flush()
@@ -150,7 +160,7 @@ class Authorize:
             i += 1
             if timeDelta < DataToTime.convertToTime(transactionList[j-1].time):
                 intervalCounter = intervalCounter if intervalCounter > 0 else 0
-                
+
         return transactionList
 
 
@@ -300,6 +310,6 @@ class Transaction:
 
 
 if select.select([sys.stdin,],[],[],0.0)[0]:
-    authorize = Authorize(sys.stdin)
+    authorize = Authorize(sys.stdin, False)
 else:
     print("No data")
