@@ -14,16 +14,21 @@ RUNNING THE APPLICATION:
 
 To run the script inside a docker, just run the 2 commands bellow:
 
+Build image:
 docker build -t authorize .
+
+Run the container:
 docker run --name=authorize -v $(PWD) /home --rm -it -e PYTHONUNBUFFERED=0 authorize
 
-Docker version will run all testcases and start the app over testcases/operations file on testcases folder, that can be modified on Dockerfile to point to another file, also can modify the file on the fly by going inside the testcases folder and modifying the operations file by adding new lines while the application is running, that folder is set as a volume inside docker, so all changes on the folder will be reflected to container content, no need to go inside the container to modify it.
+Docker version will run all testcases and start the app over testcases/operations file that is inside testcases folder, that can be modified on Dockerfile to point to another file, also can modify the file on the fly by going inside the testcases folder and modifying the operations file by adding new lines while the application is running, that folder is set as a volume inside docker, so all changes on the folder will be reflected to container content, no need to go inside the container to modify it.
 
 
 APPLICATION AND TESTCASES OUTSIDE DOCKER:
 
-To run outside docker:
-python authorize.py < testcases/operations0
+To run outside docker you will need to have python:2 installed, its installed by default on mac machines, on linux, it will require instalation:
+
+python authorize.py < testcases/operations
+
 All operation files ending with numbers(0-7) have a EOF at the end so it will stop application, to run multiple testcases at once
 
 You can run this file to keep application on as it does not contain a EOF flag:
@@ -33,3 +38,32 @@ To run testcases only you can do:
 python authorize_test.py 
 
 This will run all testcases
+
+__________________________________________________________
+
+LIST OF FILES
+
+authorize_test.py       Test application, will run over authorize.py with testcase, matching the respective validation
+authorize.py            Main application
+colorprint.py           Color for test results
+Dockerfile              To build docker image
+README.md               This file
+
+testcases/              Folder containing all tests and validations
+    operations          Single operation file without EOF, will let app run
+    operations0         Multiple test cases with EOF to run on sequence
+    operations1
+    operations2
+    operations3
+    operations4
+    operations5
+    operations6
+    operations7
+    validations0
+    validations1
+    validations2
+    validations3
+    validations4
+    validations5
+    validations6
+    validations7
