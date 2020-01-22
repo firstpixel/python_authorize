@@ -1,5 +1,18 @@
 #!/usr/bin/env python2
 # coding: latin-1
+#
+# author: Gil Beyruth
+# developed for nubank interview
+#
+# run sample:
+# python authorize.py < testcases/operations0
+#
+# to let it run undefinetly remove the EOF from opertions files
+#
+# run test:
+# python authorize_test.py 
+# will run all testcases
+#
 import unittest, sys, json
 from colorprint import ColorPrint as _
 

@@ -1,18 +1,19 @@
 #!/usr/bin/env python2
 # coding: latin-1
 #
-# author: Gil Beyruth
 # developed for nubank interview
 #
 # run sample:
 # python authorize.py < testcases/operations0
 #
-# to let it run undefinetly remove the EOF from opertions files
+# to let it run indefinitely, remove the EOF from opertions files
+# to stop the script, just press Ctrl+c
 #
 # run test:
 # python authorize_test.py 
 # will run all testcases
 #
+# docker run -it --rm --name authorize -v "$PWD":/usr/src/authorize python:2 python authorize.py < testcases/operations
 
 import sys, json, datetime, time, select
 from datetime import timedelta, date
@@ -41,7 +42,7 @@ class Authorize:
             while True:
                 for line in iter(sys.stdin.readline, b''):
                     self.violationList = []
-                    self.orderedList =  self.orderedList if self.orderedList > 0 else []
+                    self.orderedList =  self.orderedList if len(self.orderedList) > 0 else []
                     self.resultString = ""
                     self.resultObject = {}
                     self.transaction = None
@@ -168,7 +169,7 @@ class Authorize:
             trans = transactionList[-1]
             topItem = transactionList[0]
             timeFormated = DataToTime.convertToTime(trans.time)
-            timeDelta =  timeFormated - datetime.timedelta(0,180)
+            timeDelta =  timeFormated - datetime.timedelta(0,240)
                 
             if DataToTime.convertToTime(topItem.time) > timeDelta:
                 transactionList.pop(0)
@@ -305,4 +306,4 @@ class Transaction:
 if select.select([sys.stdin,],[],[],0.0)[0]:
     authorize = Authorize(sys.stdin)
 else:
-    print "No data"
+    print("No data")
