@@ -1,10 +1,21 @@
 #!/usr/bin/env python2
 # coding: latin-1
-import sys, json, datetime
+#
+# author: Gil Beyruth
+# developed for nubank interview
+#
+# run sample:
+# python authorize.py < testcases/operations0
+#
+# to let it run undefinetly remove the EOF from opertions files
+#
+# run test:
+# python authorize_test.py 
+# will run all testcases
+#
+
+import sys, json, datetime, time, select
 from datetime import timedelta, date
-import time
-
-
 
 
 class Authorize:
@@ -12,12 +23,12 @@ class Authorize:
         self.accountCreated = False
         self.defaultAccount = None
         self.availableLimit = 0 
-        self.orderedArray = []
+        self.orderedList = []
         self.totalResultString = ""
-        self.originalOrderArray = []
+        self.originalOrderList = []
         self.accountViolations = self.enum(  
             INITIALIZED = "account-already-initialized"  
-            )
+        )
         self.transactionViolations = self.enum(
             NOT_INITIALIZED = "account-not-initialized",
             NOT_ACTIVE = "card-not-active",
@@ -29,74 +40,62 @@ class Authorize:
         try:
             while True:
                 for line in iter(sys.stdin.readline, b''):
-                    
-                    
-                    self.violationArray = []
-                    
-                    self.orderedArray =  self.orderedArray if self.orderedArray > 0 else []
+                    self.violationList = []
+                    self.orderedList =  self.orderedList if self.orderedList > 0 else []
                     self.resultString = ""
                     self.resultObject = {}
                     self.transaction = None
-
+                    #break for test cases
                     if line == "EOF":
                         sys.stdout.flush()
                         pass 
                         return None
 
+                    #check if line is json
                     if not self.is_json(line):
                         continue
-                    
-                    
+        
                     data = json.loads(line)
-                    
                     transaction = None
-
-                    
-                    #for accountData in data:
                         
                     #check accounts
                     if "account" in data:
                         activeCard = data["account"]["active-card"]
                         availableLimit = data["account"]["available-limit"]
                         account = Account(activeCard, availableLimit)
-                        self.violationArray = self.checkAccountViolations(self.violationArray, account)
-                        account.setViolations(self.violationArray)
-                        
-                        
-                        
+                        self.violationList = self.checkAccountViolations(self.violationList, account)
+                        account.setViolations(self.violationList)
+                    
                     #check transactions   
                     if "transaction" in data:
                         merchant = data["transaction"]["merchant"]
                         amount = data["transaction"]["amount"]
                         timeTrans = data["transaction"]["time"]
-                        
                         self.transaction = Transaction(self.defaultAccount, merchant, amount, timeTrans, self.originalIndex)
-                        self.violationArray = self.checkTransactionViolations(self.violationArray, self.defaultAccount, self.transaction)
-                        self.transaction.setViolations(self.violationArray)
-                        self.orderedArray.append(self.transaction)
+                        self.violationList = self.checkTransactionViolations(self.violationList, self.defaultAccount, self.transaction)
+                        self.transaction.setViolations(self.violationList)
+                        self.orderedList.append(self.transaction)
 
-                    
-                    self.resultObject = self.getResultObject(self.defaultAccount, self.violationArray)
-                    self.originalOrderArray.append(self.resultObject)
-
-                            
-                    #sort transaction array by time
-                    DataToTime.sortByTime(self.orderedArray)
+                    self.resultObject = self.getResultObject(self.defaultAccount, self.violationList)
+                    self.originalOrderList.append(self.resultObject)
+      
+                    #sort transaction List by time
+                    DataToTime.sortByTime(self.orderedList)
                     
                     #check for double transaction and small interval
-                    self.orderedArray = self.getDoubledTransactionAndSmallIntervalViolations(self.orderedArray)
+                    self.orderedList = self.getDoubledTransactionAndSmallIntervalViolations(self.orderedList)
                     
                     self.setOriginalOrder()
-                    self.orderedArray = self.clearOrderArrayList(self.orderedArray)
+                    self.orderedList = self.clearOrderList(self.orderedList)
                     
                     if not self.transaction is None:
-                        self.setTransactionAccountLimit( self.transaction, self.originalOrderArray[-1])
+                        self.setTransactionAccountLimit( self.transaction, self.originalOrderList[-1])
                     else:
-                        self.originalOrderArray[-1]["account"]["available-limit"] = self.availableLimit
+                        self.originalOrderList[-1]["account"]["available-limit"] = self.availableLimit
 
                     #transform item in string
-                    if len(self.originalOrderArray) > 0:
-                        self.resultString = json.dumps(self.originalOrderArray[-1]) + '\n'
+                    if len(self.originalOrderList) > 0:
+                        self.resultString = json.dumps(self.originalOrderList[-1]) + '\n'
                     
                     self.totalResultString += self.resultString
 
@@ -117,124 +116,134 @@ class Authorize:
     def setOriginalOrder(self):
         k=0
         l=0
-        while l < len(self.originalOrderArray):
+        while l < len(self.originalOrderList):
             k = 0
-            while k < len(self.orderedArray):
-                if self.orderedArray[k].orIndex == l:
-                    self.originalOrderArray[l]['violations'] = self.orderedArray[k].violations
-                    self.originalOrderArray[l]['account']['available-limit'] = self.orderedArray[k].availableLimit if hasattr(self.orderedArray[k], 'availableLimit') else 0
+            while k < len(self.orderedList):
+                if self.orderedList[k].orIndex == l:
+                    self.originalOrderList[l]['violations'] = self.orderedList[k].violations
+                    self.originalOrderList[l]['account']['available-limit'] = self.orderedList[k].availableLimit if hasattr(self.orderedList[k], 'availableLimit') else 0
                 k += 1
             l += 1
         
-    def getDoubledTransactionAndSmallIntervalViolations(self, transactionArray):
+    def getDoubledTransactionAndSmallIntervalViolations(self, transactionList):
         
         i = 0
-        listSize = len(transactionArray)
+        listSize = len(transactionList)
         intervalCounter = 1
         while i < listSize:
-            trans = transactionArray[i]
+            trans = transactionList[i]
             timeFormated = DataToTime.convertToTime(trans.time)
             timeDelta =  timeFormated + datetime.timedelta(0,120)
             j = i + 1
-            first = transactionArray[i]
+            first = transactionList[i]
             
-            while j < listSize and timeDelta >= DataToTime.convertToTime(transactionArray[j].time):
-                next = transactionArray[j]
+            while j < listSize and timeDelta >= DataToTime.convertToTime(transactionList[j].time):
+                next = transactionList[j]
                 if intervalCounter > 3:
-                    if not self.transactionViolations.HIGH_FREQUENCY in transactionArray[j].violations:
-                        transactionArray[j].violations.append(self.transactionViolations.HIGH_FREQUENCY)
+                    if not self.transactionViolations.HIGH_FREQUENCY in transactionList[j].violations:
+                        transactionList[j].violations.append(self.transactionViolations.HIGH_FREQUENCY)
 
                 if first.merchant == next.merchant and first.amount == next.amount:
-                    if not self.transactionViolations.DOUBLED in transactionArray[j].violations:
-                        transactionArray[j].violations.append(self.transactionViolations.DOUBLED)
+                    if not self.transactionViolations.DOUBLED in transactionList[j].violations:
+                        transactionList[j].violations.append(self.transactionViolations.DOUBLED)
                 
                 intervalCounter += 1 
                 j += 1
             i += 1
-            if timeDelta < DataToTime.convertToTime(transactionArray[j-1].time):
+            if timeDelta < DataToTime.convertToTime(transactionList[j-1].time):
                 intervalCounter = intervalCounter if intervalCounter > 0 else 0
             
             
-        return transactionArray
+        return transactionList
+
+
     def dump(self,obj):
         for attr in dir(obj):
             print("obj.%s = %r" % (attr, getattr(obj, attr)))
-    def clearOrderArrayList(self, transactionArray):
-        
+
+    def clearOrderList(self, transactionList):
         i = 0
-        listSize = len(transactionArray)
+        listSize = len(transactionList)
         if listSize > 4:
-            trans = transactionArray[-1]
-            topItem = transactionArray[0]
+            trans = transactionList[-1]
+            topItem = transactionList[0]
             timeFormated = DataToTime.convertToTime(trans.time)
             timeDelta =  timeFormated - datetime.timedelta(0,180)
                 
             if DataToTime.convertToTime(topItem.time) > timeDelta:
-                transactionArray.pop(0)
-        return transactionArray
+                transactionList.pop(0)
+        return transactionList
 
-    def getResultObject(self, account, violationArray):
+
+    def getResultObject(self, account, violationList):
         if account is None:
-            return { "account": { "active-card": False, "available-limit": 0 }, "violations":  violationArray }
+            return { "account": { "active-card": False, "available-limit": 0 }, "violations":  violationList }
         else:
-            return { "account": { "active-card":  self.defaultAccount.activeCard , "available-limit":  self.defaultAccount.availableLimit }, "violations":  violationArray }
+            return { "account": { "active-card":  self.defaultAccount.activeCard , "available-limit":  self.defaultAccount.availableLimit }, "violations":  violationList }
+
 
     def enum(self,**enums):
             return type('Enum', (), enums)
 
-    def checkAccountViolations(self, violationArray, account):    
-        return self.checkAccountCreatedViolation(violationArray, account)
 
-    def checkAccountCreatedViolation(self, violationArray, account):
-        
+    def checkAccountViolations(self, violationList, account):    
+        return self.checkAccountCreatedViolation(violationList, account)
+
+
+    def checkAccountCreatedViolation(self, violationList, account):
         if self.accountCreated:
             account.availableLimit = self.availableLimit
-            violationArray.append(self.accountViolations.INITIALIZED)
-            return violationArray
+            violationList.append(self.accountViolations.INITIALIZED)
+            return violationList
         elif not account == None:
             self.defaultAccount = account
             self.availableLimit = account.availableLimit
             self.accountCreated = True
-            return violationArray
+            return violationList
     
-    def checkTransactionViolations(self, violationArray, account, transaction):
-        violationArray = self.checkTransactionAccountCreatedViolations( violationArray, account, transaction)
-        if not self.transactionViolations.NOT_INITIALIZED in violationArray:
-            violationArray = self.checkTransactionAccountActiveCardViolations( violationArray, account, transaction)
-            if not self.transactionViolations.NOT_ACTIVE in violationArray:
-                violationArray = self.checkTransactionAccountLimitViolations( violationArray, account, transaction)
-        return violationArray
 
-    def checkTransactionAccountCreatedViolations(self, violationArray, account, transaction):
+    def checkTransactionViolations(self, violationList, account, transaction):
+        violationList = self.checkTransactionAccountCreatedViolations( violationList, account, transaction)
+        if not self.transactionViolations.NOT_INITIALIZED in violationList:
+            violationList = self.checkTransactionAccountActiveCardViolations( violationList, account, transaction)
+            if not self.transactionViolations.NOT_ACTIVE in violationList:
+                violationList = self.checkTransactionAccountLimitViolations( violationList, account, transaction)
+        return violationList
+
+
+    def checkTransactionAccountCreatedViolations(self, violationList, account, transaction):
         if self.accountCreated:
             account.availableLimit = self.availableLimit
-            return violationArray
+            return violationList
         else:
-            violationArray.append(self.transactionViolations.NOT_INITIALIZED)
-            return violationArray
+            violationList.append(self.transactionViolations.NOT_INITIALIZED)
+            return violationList
 
-    def checkTransactionAccountActiveCardViolations(self, violationArray, account, transaction):
+
+    def checkTransactionAccountActiveCardViolations(self, violationList, account, transaction):
         if account.activeCard:
-            return violationArray
+            return violationList
         else:
-            violationArray.append(self.transactionViolations.NOT_ACTIVE)
-            return violationArray
+            violationList.append(self.transactionViolations.NOT_ACTIVE)
+            return violationList
 
-    def checkTransactionAccountLimitViolations(self, violationArray, account, transaction):
+
+    def checkTransactionAccountLimitViolations(self, violationList, account, transaction):
         if self.availableLimit - transaction.amount >= 0:
-            return violationArray
+            return violationList
         else:
-            violationArray.append(self.transactionViolations.INSUFFICIENT)
-            return violationArray
+            violationList.append(self.transactionViolations.INSUFFICIENT)
+            return violationList
+
 
     def setTransactionAccountLimit(self,  transaction, item):
-        
         if len(transaction.violations) == 0 and (self.availableLimit - transaction.amount) >=0:
             self.availableLimit = self.availableLimit - transaction.amount
             item["account"]["available-limit"] = self.availableLimit
-            
         else:
             item["account"]["available-limit"] = self.availableLimit   
+
+
 
 class DataToTime:
     @staticmethod
@@ -249,13 +258,15 @@ class DataToTime:
         return elem.time
 
 
+
 class Account:
     def __init__(self,activeCardStr, availableLimitStr):
         self.activeCard = activeCardStr
         self.availableLimit = availableLimitStr
-    def setViolations(self, violationsArray):
-        self.violations = violationsArray
+    def setViolations(self, violationsList):
+        self.violations = violationsList
     
+
 
 class Transaction:
     def __init__(self,accountObj, merchantStr, amountStr, timeStr, origIndex):
@@ -269,240 +280,29 @@ class Transaction:
     def addTransaction(merchantStr, amountStr, timeStr):
         currentTransaction = {merchant:merchantStr, amounth:amount}
         self.transactionList.add()
-        self.transactionSortedArray.append(currentTransaction)
+        self.transactionSortedList.append(currentTransaction)
     
+
     def increaseTransactions():
         self.countTransactionsIn2Minutes += 1
 
-    def setViolations(self, violationsArray):
-        self.violations = violationsArray
+
+    def setViolations(self, violationsList):
+        self.violations = violationsList
     
+
     def addViolation(self, violation):
         self.violations.append(violation)
 
-    def sortArray(unsortedArray): 
+
+    def sortList(unsortedList): 
         return sorted(
-        unsortedArray,
+        unsortedList,
         key=lambda x: datetime.strptime(x['Created'], '%m/%d/%y %H:%M'), reverse=True
-)
+        )
 
-
-import select
 
 if select.select([sys.stdin,],[],[],0.0)[0]:
     authorize = Authorize(sys.stdin)
 else:
     print "No data"
-
-
-
-
-
-
-
-#{"account": {"active-card": true, "available-limit": 100}}
-#    {"transaction": {"merchant": "Burger King", "amount": 20, "time": "2019-02-13T10:00:00.000Z"}}
-
-
-'''
-
-
-Code Challenge: Authorizer
-==========================
-
-You are tasked with implementing an application that authorizes a
-transaction for a specific account following a set of predefined rules.
-
-Please read the instructions below, and feel free to ask for
-clarifications if needed.
-
-Packaging
----------
-
-Your README file should contain a description on relevant code design
-choices, along with instructions on how to build and run your
-application.
-
-Building and running the application must be possible under Unix or Mac
-operating systems. [Dockerized
-builds](https://docs.docker.com/engine/reference/commandline/build/) are
-welcome.
-
-You may use open source libraries you find suitable, but please refrain
-as much as possible from adding frameworks and unnecessary boilerplate
-code.
-
-Sample usage
-------------
-
-Your program is going to be provided 'json' lines as input in the 'stdin', and should provide a 'json' line output for each one — imagine
-this as a stream of events arriving at the authorizer.
-
-
-    $ cat operations
-    {"account": {"active-card": true, "available-limit": 100}}
-    {"transaction": {"merchant": "Burger King", "amount": 20, "time": "2019-02-13T10:00:00.000Z"}}
-    {"transaction": {"merchant": "Habbib's", "amount": 90, "time": "2019-02-13T11:00:00.000Z"}}
-
-    $ authorize < operations
-
-    {"account": {"active-card": true, "available-limit": 100}, "violations": []}
-    {"account": {"active-card": true, "available-limit": 80}, "violations": []}
-    {"account": {"active-card": true, "available-limit": 80}, "violations": ["insufficient-limit"]}
-
-State
------
-
-The program **should not** rely on any external database. Internal state
-should be handled by an explicit in-memory structure. State is to be
-reset at application start.
-
-Operations
-----------
-
-The program handles two kinds of operations, deciding on which one
-according to the line that is being processed:
-
-1.  Account creation
-2.  Transaction authorization
-
-For the sake of simplicity, you can assume all monetary values are
-positive integers using a currency without cents.
-
-* * * * *
-
-### 1. Account creation
-
-#### Input
-
-Creates the account with 'available-limit' and 'active-card' set. For
-simplicity sake, we will assume the application will deal with just one
-account.
-
-#### Output
-
-The created account's current state + any business logic violations.
-
-#### Business rules
-
--   Once created, the account should not be updated or recreated:
-    'account-already-initialized'.
-
-#### Examples
-
-    input
-        {"account": {"active-card": true, "available-limit": 100}}
-        ...
-        {"account": {"active-card": true, "available-limit": 350}}
-
-
-    output
-        {"account": {"active-card": true, "available-limit": 100}, "violations": []}
-        ...
-        {"account": {"active-card": true, "available-limit": 100}, "violations": ["account-already-initialized" ]}
-
-* * * * *
-
-### 2. Transaction authorization
-
-#### Input
-
-Tries to authorize a transaction for a particular 'merchant', 'amount'
-and 'time' given the account's state and last **authorized**
-transactions.
-
-#### Output
-
-The account's current state + any business logic violations.
-
-#### Business rules
-
-You should implement the following rules, keeping in mind **new rules
-will appear** in the future:
-
--   No transaction should be accepted without a properly initialized
-    account: 'account-not-initialized'
-
--   No transaction should be accepted when the card is not active:
-    'card-not-active'
-
--   The transaction amount should not exceed available limit:
-    'insufficient-limit'
-
--   There should not be more than 3 transactions on a 2 minute interval:
-    'high-frequency-small-interval' (the input order cannot be relied
-    upon, since transactions can eventually be out of order respectively
-    to their 'time's)
-
--   There should not be more than 1 similar transactions (same amount
-    and merchant) in a 2 minutes interval: 'doubled-transaction'
-
-#### Examples
-
-##### Given there is an account with 'active-card: true' and 'available-limit: 100':
-
-    input
-        {"transaction": {"merchant": "Burger King", "amount": 20, "time": "2019-02-13T10:00:00.000Z"}}
-
-    output
-        {"account": {"active-card": true, "available-limit": 80}, "violations": []}
-
-##### Given there is an account with 'active-card: true', 'available-limit: 80' and 3 transaction occurred in the last 2 minutes:
-
-    input
-        {"transaction": {"merchant": "Habbib's", "amount": 90, "time": "2019-02-13T10:01:00.000Z"}}
-
-    output
-        {"account": {"active-card": true, "available-limit": 80}, "violations": ["insufficient-limit" "high-frequency-small-interval"]}
-
-* * * * *
-
-Error handling
---------------
-
--   Please assume input parsing errors will not happen. We will not
-    evaluate your submission against input that breaks the contract.
-
--   Violations of the business rules are **not** considered to be errors
-    as they are expected to happen and should be listed in the outputs's
-    'violations' field as described on the 'output' schema in the
-    examples. That means the program execution should continue normally
-    after any violation.
-
-Our expectations
-----------------
-
-We at Nubank value **simple, elegant, and working code**. This exercise
-should reflect your understanding of it.
-
-Your solution is expected to be **production quality**, **maintainable**
-and **extensible**. Hence, we will look for:
-
--   Immutability;
--   Quality unit and integration tests;
--   Documentation where needed;
--   Instructions to run the code.
-
-General notes
--------------
-
--   This challenge may be extended by you and a Nubank engineer on a
-    different step of the process;
--   You should submit your solution source code to us as a compressed
-    file containing the code and possible documentation. Please make
-    sure not to include unnecessary files such as compiled binaries,
-    libraries, etc;
--   Do not upload your solution to public repositories in GitHub,
-    BitBucket, etc;
--   The project should be implemented as a stream application rather
-    than a Rest API.
--   Please keep your test anonymous, paying attention to:
-    -   the code itself, including tests and namespaces;
-    -   version control author information;
-    -   automatic comments your development environment may add.
-
-AuthorizerChallenge.md
-Displaying AuthorizerChallenge.md.
-
-
-'''
