@@ -136,7 +136,6 @@ class Authorize:
             timeFormated = DataToTime.convertToTime(trans.time)
             timeDelta =  timeFormated + datetime.timedelta(0,120)
             j = i + 1
-            
             first = transactionArray[i]
             
             while j < listSize and timeDelta >= DataToTime.convertToTime(transactionArray[j].time):
