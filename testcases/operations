@@ -30,3 +30,4 @@
 {"transaction": {"merchant": "Burger King", "amount": 10, "time": "2019-02-13T14:00:00.000Z"}}
 {"transaction": {"merchant": "Burger King", "amount": 10, "time": "2019-02-13T14:00:00.000Z"}}
 {"transaction": {"merchant": "Burger King", "amount": 10, "time": "2019-02-13T14:00:00.000Z"}}
+{"transaction": {"merchant": "Habbib's", "amount": 10, "time": "2019-02-19T11:12:21.000Z"}}

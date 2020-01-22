@@ -1,3 +1,4 @@
+NUBANK INTERVIEW SCRIPT (AUTHORIZE)
 This script is intent for interview porpose only.
 
 I decide to use python as it is a great language for scripting and is a dynamic programming language.
@@ -7,20 +8,26 @@ I added a way to stop the script by adding the string EOF at end of each operati
 Also added a testing variable, so when testing it will create a comparative result string to match the validations files inside testcases.
 To stop the script, just press Ctrl+c
 
+-------------------------------------------------------------------------
+
+RUNNING THE APPLICATION:
 
 To run the script inside a docker, just run the 2 commands bellow:
 
 docker build -t authorize .
-docker run -it --name authorize authorize
+docker run --name=authorize -v $(PWD) /home --rm -it -e PYTHONUNBUFFERED=0 authorize
 
-Docker version will run all testcases and start the app over operations file on same folder as authorize application, that can be modified on Dockerfile to point to another file, also can modify the file by going inside the container and modifying the operations file by adding new lines while the application is running, to do that just go inside the container by runing this:
+Docker version will run all testcases and start the app over testcases/operations file on testcases folder, that can be modified on Dockerfile to point to another file, also can modify the file on the fly by going inside the testcases folder and modifying the operations file by adding new lines while the application is running, that folder is set as a volume inside docker, so all changes on the folder will be reflected to container content, no need to go inside the container to modify it.
 
-docker run -it authorize /bin/bash
 
+APPLICATION AND TESTCASES OUTSIDE DOCKER:
 
 To run outside docker:
 python authorize.py < testcases/operations0
-python authorize.py < operations
+All operation files ending with numbers(0-7) have a EOF at the end so it will stop application, to run multiple testcases at once
+
+You can run this file to keep application on as it does not contain a EOF flag:
+python authorize.py < testcases/operations
 
 To run testcases only you can do:
 python authorize_test.py 
