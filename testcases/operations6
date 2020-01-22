@@ -1,0 +1,10 @@
+{"transaction": {"merchant": "Burger King", "amount": 20, "time": "2019-02-13T10:00:00.000Z"}}
+{"account": {"active-card": true, "available-limit": 200}}
+{"transaction": {"merchant": "Burger King", "amount": 10, "time": "2019-02-13T10:00:00.000Z"}}
+{"transaction": {"merchant": "Habbib's", "amount": 80, "time": "2019-02-13T11:00:00.000Z"}}
+{"transaction": {"merchant": "Habbib's", "amount": 80, "time": "2019-02-13T11:01:00.000Z"}}
+{"transaction": {"merchant": "Habbib's", "amount": 10, "time": "2019-02-13T11:01:20.000Z"}}
+{"transaction": {"merchant": "Habbib's", "amount": 10, "time": "2019-02-13T11:01:21.000Z"}}
+{"transaction": {"merchant": "Habbib's", "amount": 10, "time": "2019-02-13T11:04:20.000Z"}}
+{"account": {"active-card": true, "available-limit": 350}}
+EOF

@@ -1,0 +1,4 @@
+{"account": {"active-card": true, "available-limit": 200}, "violations": []}
+{"account": {"active-card": true, "available-limit": 180}, "violations": []}
+{"account": {"active-card": true, "available-limit": 180}, "violations": ["doubled-transaction"]}
+{"account": {"active-card": true, "available-limit": 160}, "violations": []}

@@ -1,0 +1,9 @@
+{"account": {"active-card": false, "available-limit": 0}, "violations": ["account-not-initialized"]}
+{"account": {"active-card": true, "available-limit": 200}, "violations": []}
+{"account": {"active-card": true, "available-limit": 190}, "violations": []}
+{"account": {"active-card": true, "available-limit": 110}, "violations": []}
+{"account": {"active-card": true, "available-limit": 110}, "violations": ["doubled-transaction"]}
+{"account": {"active-card": true, "available-limit": 110}, "violations": ["high-frequency-small-interval"]}
+{"account": {"active-card": true, "available-limit": 110}, "violations": ["high-frequency-small-interval", "doubled-transaction"]}
+{"account": {"active-card": true, "available-limit": 100}, "violations": []}
+{"account": {"active-card": true, "available-limit": 100}, "violations": ["account-already-initialized"]}

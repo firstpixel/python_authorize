@@ -1,0 +1,5 @@
+{"account": {"active-card": true, "available-limit": 200}}
+{"transaction": {"merchant": "Burger King", "amount": 20, "time": "2019-02-13T10:00:01.230Z"}}
+{"transaction": {"merchant": "Burger King", "amount": 20, "time": "2019-02-13T10:00:01.230Z"}}
+{"transaction": {"merchant": "Habbib's", "amount": 20, "time": "2019-02-13T10:00:11.250Z"}}
+EOF
