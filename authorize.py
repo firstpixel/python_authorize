@@ -45,7 +45,7 @@ class Authorize:
                     self.resultString = ""
                     self.resultObject = {}
                     self.transaction = None
-                    
+
                     #break for test cases
                     if line == "EOF":
                         sys.stdout.flush()
@@ -109,7 +109,8 @@ class Authorize:
                     self.originalIndex += 1
 
                     #print to console
-                    sys.stdout.write(self.resultString)
+                    sys.stderr.write(self.resultString)
+                    #sys.stdout.flush()
         except KeyboardInterrupt:
             sys.stdout.flush()
             pass 
