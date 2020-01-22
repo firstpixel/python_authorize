@@ -12,8 +12,6 @@
 # run test:
 # python authorize_test.py 
 # will run all testcases
-#
-# docker run -it --rm --name authorize -v "$PWD":/usr/src/authorize python:2 python authorize.py < testcases/operations
 
 import sys, json, datetime, time, select
 from datetime import timedelta, date
@@ -101,7 +99,6 @@ class Authorize:
                     self.totalResultString += self.resultString
 
                     self.originalIndex += 1
-                    #print list          
                     sys.stdout.write(self.resultString)
         except KeyboardInterrupt:
             sys.stdout.flush()
@@ -153,8 +150,7 @@ class Authorize:
             i += 1
             if timeDelta < DataToTime.convertToTime(transactionList[j-1].time):
                 intervalCounter = intervalCounter if intervalCounter > 0 else 0
-            
-            
+                
         return transactionList
 
 
