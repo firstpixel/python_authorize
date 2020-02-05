@@ -1,4 +1,4 @@
-NUBANK INTERVIEW SCRIPT (AUTHORIZE)
+INTERVIEW SCRIPT (AUTHORIZE)
 This script is intent for interview porpose only.
 
 I decide to use python as it is a great language for scripting and is a dynamic programming language.
